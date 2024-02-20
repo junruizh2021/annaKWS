@@ -15,6 +15,7 @@ this repo is forked from https://github.com/wenet-e2e/wekws, [this is the origin
   5. [MUSAN: a corpus of music, speech, and noise recordings.](https://www.openslr.org/17/)
   6. [AISHELL-2: the largest free speech corpus available for Mandarin ASR research](https://github.com/kaldi-asr/kaldi/tree/master/egs/aishell2)
   7. [dns_challenge: ICASSP 2023 Deep Noise Suppression Challenge](https://github.com/microsoft/DNS-Challenge)
+  8. ["hi小问、你好问问": Chinese hotwords detection dataset, provided by Mobvoi CO.,LTD](https://www.openslr.org/87/)
 * 数据说明
   1. 这些数据集中只有`Hi-MIA`数据集适合作为正样本进行语音唤醒(KWS)模型的训练与研究,其他数据集均只适合与作为无关样本或负样本.
   2. `AISHELL-2`数据集需要进行申请,提供方没有提供下载链接,申请成功后会收到邮件,需要邮寄硬盘获取数据.
@@ -25,7 +26,7 @@ this repo is forked from https://github.com/wenet-e2e/wekws, [this is the origin
   3. 使用`bash tools/wav_to_duration.sh /path/to/wav.scp /path/to/wav.dur`创建dur文件,注意训练集和验证集都需要生成该文件.
   4. 使用`python tools/make_list.py /path/to/wav.scp /path/to/label_text /path/to/wav.dur /path/to/data.list` 生成数据集索引,注意训练集和验证集都需要生成该文件.
   5. 如需增加样本量,修改`tools/create_dataset.py`以实现不同的采样数量.
-### 2. one key training pipline（唤醒词是：‘嗨小问’ 或 ‘你好问问’）
+### 2. one key training pipline（使用的数据集/唤醒词是：‘嗨小问’ 或 ‘你好问问’, 即openslr-87数据集）
   ```bash
   # 安装cuda 12.1，确保/usr/local/cuda/bin已经加入PATH
   # 通过nvcc -V确认版本，通过nvidia-smi确认显卡型号，驱动版本和cuda版本，
