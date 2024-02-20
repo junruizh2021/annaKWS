@@ -31,6 +31,7 @@ this repo is forked from https://github.com/wenet-e2e/wekws, [this is the origin
   # 安装cuda 12.1，确保/usr/local/cuda/bin已经加入PATH
   # 通过nvcc -V确认版本，通过nvidia-smi确认显卡型号，驱动版本和cuda版本，
   # 确保/usr/local/cuda/lib64路径已经加入LD_LIBRARY_PATH
+  sudo apt-get install portaudio19-dev
   cd examples/hi_xiaowen/s0
   conda create -n annakws python=3.9
   conda activate annakws
@@ -39,6 +40,9 @@ this repo is forked from https://github.com/wenet-e2e/wekws, [this is the origin
   # 通过gradio_example进行简单测试。注意gradio_example中自带了一个以LFS形式上传的模型文件和若干音频文件，你可以替换为自己训练的其他模型。
   cd examples/hi_xiaowen/s0/gradio_example
   python app.py
+  # stream 测试，即维持音频流的开启，持续进行唤醒检测
+  cd examples/hi_xiaowen/s0/gradio_example
+  python stream_kws_ctc.py
   ```
   ![img](docs/xiaowen_gradio_example.png)
 

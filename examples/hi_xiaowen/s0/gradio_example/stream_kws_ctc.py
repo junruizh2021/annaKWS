@@ -536,5 +536,47 @@ def demo():
     if fout:
         fout.close()
 
+def stream_detection_demo():  # can not pass though audio devices into wsl2
+    # 1.prepare Spotter
+    kws = KeyWordSpotter(ckpt_path='model/hixiaowen/avg_30.pt',
+                     config_path='model/hixiaowen/config.yaml',
+                     token_path='model/tokens.txt',
+                     lexicon_path='model/lexicon.txt',
+                     threshold=0.02,
+                     min_frames=5,
+                     max_frames=250,
+                     interval_frames=50,
+                     score_beam=3,
+                     path_beam=20,
+                     gpu=-1,
+                     is_jit_model=False,)
+
+    kws.set_keywords("嗨小问,你好问问")
+    kws.reset_all()
+    # 2. prepare audiostream
+    from pyaudio import PyAudio
+    from pyaudio import PyAudio, paInt16
+    pa = PyAudio()
+
+    sample_rate = 16000   # 采样率
+    chunk_time = 0.3      # chunk时长，单位:秒
+    chunk_size = int(chunk_time * sample_rate)
+    buffer_size = chunk_size * 2
+
+    stream = pa.open(sample_rate, 1, paInt16, True, frames_per_buffer=buffer_size)
+    # 3. stream detection
+    while (True):
+        chunk_wav = stream.read(chunk_size)
+        # print("len(chunk_wav) = {}".format(len(chunk_wav)))  # should be 9600
+        result = kws.forward(chunk_wav)
+        if 'state' in result and result['state']==1:
+            keyword=result['keyword']
+            start=result['start']
+            end=result['end']
+            txt = f'Activated: Detect {keyword} from {start} to {end} second.'
+            print(txt)
+    pass
+
 if __name__ == '__main__':
-    demo()
+    # demo()
+    stream_detection_demo()

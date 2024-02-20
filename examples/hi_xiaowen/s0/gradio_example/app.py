@@ -55,6 +55,7 @@ def detection(audio, kw):
     interval = int(0.3 * 16000) * 2
     for i in range(0, len(wav), interval):
         chunk_wav = wav[i: min(i + interval, len(wav))]
+        print("len(chunk_wav) = {}".format(len(chunk_wav)))
         result = kws.forward(chunk_wav)
 
         if 'state' in result and result['state']==1:
