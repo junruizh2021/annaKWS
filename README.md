@@ -3,7 +3,9 @@ KWS (keyword spotting) research
 
 # about this repo
 ## 1. what is wekws
-this repo is forked from https://github.com/wenet-e2e/wekws, [this is the original doc](./README-wekws.md)
+1. This repo is forked from https://github.com/wenet-e2e/wekws, [this is the original doc](./README-wekws.md)
+2. As a forked repo, why create a new repo rather than a "fork"? <br>
+  Because the github dose not support the lfs upload into a forked repo, and I need lfs on my developments. In addition, I made some incompatible modifications and have no plan to make a pull request to the original wekws.
 ## 2. download dataset
 * 方案1,使用脚本下载AISHELL2, musan, dns_challenge数据集
   `python tools/download.py <download_dir>`, 该方案从aliyun镜像下载,并且会进行解压缩,并生成文件列表all.txt
