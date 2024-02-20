@@ -19,8 +19,9 @@ KWS (keyword spotting) research
   7. [dns_challenge: ICASSP 2023 Deep Noise Suppression Challenge](https://github.com/microsoft/DNS-Challenge)
   8. ["hi小问、你好问问": Chinese hotwords detection dataset, provided by Mobvoi CO.,LTD](https://www.openslr.org/87/)
 * 数据说明
-  1. 这些数据集中只有`Hi-MIA`数据集适合作为正样本进行语音唤醒(KWS)模型的训练与研究,其他数据集均只适合与作为无关样本或负样本.
-  2. `AISHELL-2`数据集需要进行申请,提供方没有提供下载链接,申请成功后会收到邮件,需要邮寄硬盘获取数据.
+  1. 这些数据集中只有`Hi-MIA`和`hi小问`数据集适合作为正样本进行语音唤醒(KWS)模型的训练与研究,其他数据集均只适合与作为无关样本或负样本.
+  2. `HI-MIA`的音频的主要差异是距离话筒远近不同,`hi小问`的数据更加多样化,包含了合成语音和加噪数据,以及各种语调.
+  3. `AISHELL-2`数据集需要进行申请,提供方没有提供下载链接,申请成功后会收到邮件,需要邮寄硬盘获取数据.
 ## 3.training
 ### 1. create training dataset
   1. 训练使用himia数据集作为唤醒词（正例）数据来源，AISHELL2数据集作为非唤醒词（反例）数据来源. 在开发阶段,对于训练集,随机选出1000段正样本和1000段副样本，对于验证集,分别选出100段, 均转为16k采样, 具体才做方法如下:
@@ -47,6 +48,7 @@ KWS (keyword spotting) research
   python stream_kws_ctc.py
   ```
   ![img](docs/xiaowen_gradio_example.png)
+  ![img](docs/xiaowen_stream_example.png)
 
 # references and research log
 ## 1. hot-word detection (voice-trigger, KWS, Keyword Spotting, voice-activated)
