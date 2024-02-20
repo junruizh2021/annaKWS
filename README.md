@@ -25,6 +25,21 @@ this repo is forked from https://github.com/wenet-e2e/wekws, [this is the origin
   3. 使用`bash tools/wav_to_duration.sh /path/to/wav.scp /path/to/wav.dur`创建dur文件,注意训练集和验证集都需要生成该文件.
   4. 使用`python tools/make_list.py /path/to/wav.scp /path/to/label_text /path/to/wav.dur /path/to/data.list` 生成数据集索引,注意训练集和验证集都需要生成该文件.
   5. 如需增加样本量,修改`tools/create_dataset.py`以实现不同的采样数量.
+### 2. one key training pipline（唤醒词是：‘嗨小问’ 或 ‘你好问问’）
+  ```bash
+  # 安装cuda 12.1，确保/usr/local/cuda/bin已经加入PATH
+  # 通过nvcc -V确认版本，通过nvidia-smi确认显卡型号，驱动版本和cuda版本，
+  # 确保/usr/local/cuda/lib64路径已经加入LD_LIBRARY_PATH
+  cd examples/hi_xiaowen/s0
+  conda create -n annakws python=3.9
+  conda activate annakws
+  pip install -r requirements.txt
+  bash run.sh -1 4 # 数据下载-数据处理-训练-模型合并和导出
+  # 通过gradio_example进行简单测试。注意gradio_example中自带了一个以LFS形式上传的模型文件和若干音频文件，你可以替换为自己训练的其他模型。
+  cd examples/hi_xiaowen/s0/gradio_example
+  python app.py
+  ```
+  ![img](docs/xiaowen_gradio_example.png)
 
 # references and research log
 ## 1. hot-word detection (voice-trigger, KWS, Keyword Spotting, voice-activated)
