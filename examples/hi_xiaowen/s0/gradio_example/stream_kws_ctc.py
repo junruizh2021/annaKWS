@@ -16,7 +16,7 @@ from __future__ import print_function
 
 import argparse
 import struct
-#import wave
+# import wave
 import librosa
 import logging
 import os
@@ -33,6 +33,8 @@ from wekws.utils.checkpoint import load_checkpoint
 from tools.make_list import query_token_set, read_lexicon, read_token
 
 logging.basicConfig(level=logging.INFO)
+
+
 def get_args():
     parser = argparse.ArgumentParser(description='detect keywords online.')
     parser.add_argument('--config', required=True, help='config file')
@@ -98,6 +100,7 @@ def is_sublist(main_list, check_list):
                 return i
     else:
         return -1
+
 
 def ctc_prefix_beam_search(t, probs, cur_hyps, keywords_idxset, score_beam_size):
     '''
@@ -186,11 +189,12 @@ def ctc_prefix_beam_search(t, probs, cur_hyps, keywords_idxset, score_beam_size)
 
     return next_hyps
 
+
 class KeyWordSpotter(torch.nn.Module):
     def __init__(self, ckpt_path, config_path, token_path, lexicon_path,
                  threshold, min_frames=5, max_frames=250, interval_frames=50,
                  score_beam=3, path_beam=20,
-                 gpu=-1, is_jit_model=False,):
+                 gpu=-1, is_jit_model=False, ):
         super().__init__()
         os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
         with open(config_path, 'r') as fin:
@@ -202,9 +206,9 @@ class KeyWordSpotter(torch.nn.Module):
         self.wave_remained = np.array([])
         self.num_mel_bins = dataset_conf['feature_extraction_conf']['num_mel_bins']
         self.frame_length = dataset_conf['feature_extraction_conf']['frame_length']  # in ms
-        self.frame_shift = dataset_conf['feature_extraction_conf']['frame_shift']    # in ms
+        self.frame_shift = dataset_conf['feature_extraction_conf']['frame_shift']  # in ms
         self.downsampling = dataset_conf.get('frame_skip', 1)
-        self.resolution = self.frame_shift / 1000   # in second
+        self.resolution = self.frame_shift / 1000  # in second
         # fsmn splice operation
         self.context_expansion = dataset_conf.get('context_expansion', False)
         self.left_context = 0
@@ -214,7 +218,6 @@ class KeyWordSpotter(torch.nn.Module):
             self.right_context = dataset_conf['context_expansion_conf']['right']
         self.feature_remained = None
         self.feats_ctx_offset = 0  # after downsample, offset exist.
-
 
         # model related
         if is_jit_model:
@@ -237,7 +240,6 @@ class KeyWordSpotter(torch.nn.Module):
         logging.info(f'lexicons {lexicon_path} with {len(self.lexicon_table)} units loaded.')
         self.in_cache = torch.zeros(0, 0, 0, dtype=torch.float)
 
-
         # decoding and detection related
         self.score_beam = score_beam
         self.path_beam = path_beam
@@ -252,7 +254,7 @@ class KeyWordSpotter(torch.nn.Module):
         self.hit_keyword = None
         self.activated = False
 
-        self.total_frames = 0   # frame offset, for absolute time
+        self.total_frames = 0  # frame offset, for absolute time
         self.last_active_pos = -1  # the last frame of being activated
         self.result = {}
 
@@ -294,18 +296,18 @@ class KeyWordSpotter(torch.nn.Module):
 
         wave = np.array(data)
         wave = np.append(self.wave_remained, wave)
-        if wave.size < (self.frame_length * self.sample_rate / 1000) * self.right_context :
+        if wave.size < (self.frame_length * self.sample_rate / 1000) * self.right_context:
             self.wave_remained = wave
             return None
         wave_tensor = torch.from_numpy(wave).float().to(self.device)
-        wave_tensor = wave_tensor.unsqueeze(0)   # add a channel dimension
+        wave_tensor = wave_tensor.unsqueeze(0)  # add a channel dimension
         feats = kaldi.fbank(wave_tensor,
-                          num_mel_bins=self.num_mel_bins,
-                          frame_length=self.frame_length,
-                          frame_shift=self.frame_shift,
-                          dither=0,
-                          energy_floor=0.0,
-                          sample_frequency=self.sample_rate)
+                            num_mel_bins=self.num_mel_bins,
+                            frame_length=self.frame_length,
+                            frame_shift=self.frame_shift,
+                            dither=0,
+                            energy_floor=0.0,
+                            sample_frequency=self.sample_rate)
         # update wave remained
         feat_len = len(feats)
         frame_shift = int(self.frame_shift / 1000 * self.sample_rate)
@@ -320,7 +322,7 @@ class KeyWordSpotter(torch.nn.Module):
             else:
                 feats_pad = torch.cat((self.feature_remained, feats))
 
-            ctx_frm = feats_pad.shape[0] - (self.right_context+self.right_context)
+            ctx_frm = feats_pad.shape[0] - (self.right_context + self.right_context)
             ctx_win = (self.left_context + self.right_context + 1)
             ctx_dim = feats.shape[1] * ctx_win
             feats_ctx = torch.zeros(ctx_frm, ctx_dim, dtype=torch.float32)
@@ -328,13 +330,13 @@ class KeyWordSpotter(torch.nn.Module):
                 feats_ctx[i] = torch.cat(tuple(feats_pad[i: i + ctx_win])).unsqueeze(0)
 
             # update feature remained, and feats
-            self.feature_remained = feats[-(self.left_context+self.right_context):]
+            self.feature_remained = feats[-(self.left_context + self.right_context):]
             feats = feats_ctx.to(self.device)
         if self.downsampling > 1:
-            last_remainder = 0 if self.feats_ctx_offset==0 else self.downsampling-self.feats_ctx_offset
-            remainder = (feats.size(0)+last_remainder) % self.downsampling
+            last_remainder = 0 if self.feats_ctx_offset == 0 else self.downsampling - self.feats_ctx_offset
+            remainder = (feats.size(0) + last_remainder) % self.downsampling
             feats = feats[self.feats_ctx_offset::self.downsampling, :]
-            self.feats_ctx_offset = remainder if remainder == 0 else self.downsampling-remainder
+            self.feats_ctx_offset = remainder if remainder == 0 else self.downsampling - remainder
         return feats
 
     def decode_keywords(self, t, probs):
@@ -382,17 +384,17 @@ class KeyWordSpotter(torch.nn.Module):
         if hit_keyword is not None:
             if self.hit_score >= self.threshold and \
                     self.min_frames <= duration <= self.max_frames \
-                    and (self.last_active_pos==-1 or end-self.last_active_pos >= self.interval_frames):
+                    and (self.last_active_pos == -1 or end - self.last_active_pos >= self.interval_frames):
                 self.activated = True
                 self.last_active_pos = end
                 logging.info(
                     f"Frame {absolute_time} detect {hit_keyword} from {start} to {end} frame. "
                     f"duration {duration}, score {self.hit_score}, Activated.")
 
-            elif self.last_active_pos>0 and end-self.last_active_pos < self.interval_frames:
+            elif self.last_active_pos > 0 and end - self.last_active_pos < self.interval_frames:
                 logging.info(
                     f"Frame {absolute_time} detect {hit_keyword} from {start} to {end} frame. "
-                    f"but interval {end-self.last_active_pos} is lower than {self.interval_frames}, Deactivated. ")
+                    f"but interval {end - self.last_active_pos} is lower than {self.interval_frames}, Deactivated. ")
 
             elif self.hit_score < self.threshold:
                 logging.info(
@@ -416,10 +418,10 @@ class KeyWordSpotter(torch.nn.Module):
         feature = self.accept_wave(wave_chunk)
         if feature is None or feature.size(0) < 1:
             return {}  # # the feature is not enough to get result.
-        feature = feature.unsqueeze(0)   # add a batch dimension
+        feature = feature.unsqueeze(0)  # add a batch dimension
         logits, self.in_cache = self.model(feature, self.in_cache)
         probs = logits.softmax(2)  # (batch_size, maxlen, vocab_size)
-        probs = probs[0].cpu()   # remove batch dimension, move to cpu for ctc_prefix_beam_search
+        probs = probs[0].cpu()  # remove batch dimension, move to cpu for ctc_prefix_beam_search
         for (t, prob) in enumerate(probs):
             t *= self.downsampling
             self.decode_keywords(t, prob)
@@ -451,9 +453,10 @@ class KeyWordSpotter(torch.nn.Module):
         self.feature_remained = None
         self.feats_ctx_offset = 0  # after downsample, offset exist.
         self.in_cache = torch.zeros(0, 0, 0, dtype=torch.float)
-        self.total_frames = 0   # frame offset, for absolute time
+        self.total_frames = 0  # frame offset, for absolute time
         self.last_active_pos = -1  # the last frame of being activated
         self.result = {}
+
 
 def demo():
     args = get_args()
@@ -532,24 +535,24 @@ def demo():
                     if fout:
                         fout.write('{} rejected\n'.format(utt_name))
 
-
     if fout:
         fout.close()
+
 
 def stream_detection_demo():  # can not pass though audio devices into wsl2
     # 1.prepare Spotter
     kws = KeyWordSpotter(ckpt_path='model/hixiaowen/avg_30.pt',
-                     config_path='model/hixiaowen/config.yaml',
-                     token_path='model/tokens.txt',
-                     lexicon_path='model/lexicon.txt',
-                     threshold=0.02,
-                     min_frames=5,
-                     max_frames=250,
-                     interval_frames=50,
-                     score_beam=3,
-                     path_beam=20,
-                     gpu=-1,
-                     is_jit_model=False,)
+                         config_path='model/hixiaowen/config.yaml',
+                         token_path='model/tokens.txt',
+                         lexicon_path='model/lexicon.txt',
+                         threshold=0.02,
+                         min_frames=5,
+                         max_frames=250,
+                         interval_frames=50,
+                         score_beam=3,
+                         path_beam=20,
+                         gpu=-1,
+                         is_jit_model=False, )
 
     kws.set_keywords("嗨小问,你好问问")
     kws.reset_all()
@@ -558,8 +561,8 @@ def stream_detection_demo():  # can not pass though audio devices into wsl2
     from pyaudio import PyAudio, paInt16
     pa = PyAudio()
 
-    sample_rate = 16000   # 采样率
-    chunk_time = 0.3      # chunk时长，单位:秒
+    sample_rate = 16000  # 采样率
+    chunk_time = 0.3  # chunk时长，单位:秒
     chunk_size = int(chunk_time * sample_rate)
     buffer_size = chunk_size * 2
 
@@ -569,13 +572,14 @@ def stream_detection_demo():  # can not pass though audio devices into wsl2
         chunk_wav = stream.read(chunk_size)
         # print("len(chunk_wav) = {}".format(len(chunk_wav)))  # should be 9600
         result = kws.forward(chunk_wav)
-        if 'state' in result and result['state']==1:
-            keyword=result['keyword']
-            start=result['start']
-            end=result['end']
+        if 'state' in result and result['state'] == 1:
+            keyword = result['keyword']
+            start = result['start']
+            end = result['end']
             txt = f'Activated: Detect {keyword} from {start} to {end} second.'
             print(txt)
     pass
+
 
 if __name__ == '__main__':
     # demo()
