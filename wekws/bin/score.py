@@ -52,7 +52,7 @@ def get_args():
                         default=False,
                         help='Use pinned memory buffers used for reading')
     parser.add_argument('--prefetch',
-                        default=100,
+                        default=10,
                         type=int,
                         help='prefetch number')
     parser.add_argument('--score_file',
@@ -89,7 +89,7 @@ def main():
                                   batch_size=None,
                                   pin_memory=args.pin_memory,
                                   num_workers=args.num_workers,
-                                  prefetch_factor=args.prefetch)
+                                  prefetch_factor=None)
 
     if args.jit_model:
         model = torch.jit.load(args.checkpoint)

@@ -10,12 +10,12 @@ num_keywords=2
 config=conf/ds_tcn.yaml
 norm_mean=true
 norm_var=true
-gpus="0"
+gpus="1"
 
 checkpoint=
 dir=exp/ds_tcn
 
-num_average=30
+num_average=1
 score_checkpoint=$dir/avg_${num_average}.pt
 
 download_dir=./data/local # your data dir
@@ -61,7 +61,7 @@ fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   echo "Compute CMVN and Format datasets"
-  tools/compute_cmvn_stats.py --num_workers 16 --train_config $config \
+  tools/compute_cmvn_stats.py --num_workers 8 --train_config $config \
     --in_scp data/train/wav.scp \
     --out_cmvn data/train/global_cmvn
 
@@ -80,13 +80,14 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
   $norm_mean && cmvn_opts="--cmvn_file data/train/global_cmvn"
   $norm_var && cmvn_opts="$cmvn_opts --norm_var"
   num_gpus=$(echo $gpus | awk -F ',' '{print NF}')
-  torchrun --standalone --nnodes=1 --nproc_per_node=$num_gpus \
+#  torchrun --standalone --nnodes=1 --nproc_per_node=$num_gpus \
+  python3 -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=$num_gpus \
     wekws/bin/train.py --gpus $gpus \
       --config $config \
       --train_data data/train/data.list \
       --cv_data data/dev/data.list \
       --model_dir $dir \
-      --num_workers 8 \
+      --num_workers 0 \
       --num_keywords $num_keywords \
       --min_duration 50 \
       --seed 666 \
@@ -126,7 +127,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     --batch_size 256 \
     --checkpoint $score_checkpoint \
     --score_file $result_dir/score.txt  \
-    --num_workers 8
+    --num_workers 0
 
   for keyword in 0 1; do
     python wekws/bin/compute_det.py \

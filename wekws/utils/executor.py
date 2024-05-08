@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from tqdm import tqdm
 
 import torch
 from torch.nn.utils import clip_grad_norm_
@@ -33,7 +34,7 @@ class Executor:
         epoch = args.get('epoch', 0)
         min_duration = args.get('min_duration', 0)
 
-        for batch_idx, batch in enumerate(data_loader):
+        for batch_idx, batch in enumerate(tqdm(data_loader)):
             key, feats, target, feats_lengths, label_lengths = batch
             feats = feats.to(device)
             target = target.to(device)
@@ -53,10 +54,7 @@ class Executor:
             grad_norm = clip_grad_norm_(model.parameters(), clip)
             if torch.isfinite(grad_norm):
                 optimizer.step()
-            if batch_idx % log_interval == 0:
-                logging.debug(
-                    'TRAIN Batch {}/{} loss {:.8f} acc {:.8f}'.format(
-                        epoch, batch_idx, loss.item(), acc))
+            logging.debug('TRAIN Batch {}/{} loss {:.8f} acc {:.8f}'.format(epoch, batch_idx, loss.item(), acc))
 
     def cv(self, model, data_loader, device, args):
         ''' Cross validation on
@@ -69,7 +67,7 @@ class Executor:
         total_loss = 0.0
         total_acc = 0.0
         with torch.no_grad():
-            for batch_idx, batch in enumerate(data_loader):
+            for batch_idx, batch in enumerate(tqdm(data_loader)):
                 key, feats, target, feats_lengths, label_lengths = batch
                 feats = feats.to(device)
                 target = target.to(device)

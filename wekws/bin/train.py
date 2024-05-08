@@ -39,11 +39,11 @@ def get_args():
     parser.add_argument('--train_data', required=True, help='train data file')
     parser.add_argument('--cv_data', required=True, help='cv data file')
     parser.add_argument('--device',
-                        default='cuda',
+                        default='ipex',
                         help='cuda for nvidia gpus, ipex for intel gpus, default is cuda')
     parser.add_argument('--gpus',
-                        default='-1',
-                        help='gpu lists, seperated with `,`, -1 for cpu')
+                        default='1',
+                        help='gpu lists, seperated with `,`, -1 for cpu, 1 for Arc gpu')
     parser.add_argument('--model_dir', required=True, help='save model dir')
     parser.add_argument('--seed', type=int, default=777, help='random seed')
     parser.add_argument('--checkpoint', help='checkpoint model')
@@ -125,12 +125,12 @@ def training_with_cuda(args):
                                    batch_size=None,
                                    pin_memory=args.pin_memory,
                                    num_workers=args.num_workers,
-                                   prefetch_factor=args.prefetch)
+                                   prefetch_factor=None)
     cv_data_loader = DataLoader(cv_dataset,
                                 batch_size=None,
                                 pin_memory=args.pin_memory,
                                 num_workers=args.num_workers,
-                                prefetch_factor=args.prefetch)
+                                prefetch_factor=None)
 
     input_dim = configs['dataset_conf']['feature_extraction_conf'][
         'num_mel_bins']
@@ -283,12 +283,12 @@ def training_with_ipex(args):
                                    batch_size=None,
                                    pin_memory=args.pin_memory,
                                    num_workers=args.num_workers,
-                                   prefetch_factor=args.prefetch)
+                                   prefetch_factor=None)
     cv_data_loader = DataLoader(cv_dataset,
                                 batch_size=None,
                                 pin_memory=args.pin_memory,
                                 num_workers=args.num_workers,
-                                prefetch_factor=args.prefetch)
+                                prefetch_factor=None)
 
     input_dim = configs['dataset_conf']['feature_extraction_conf'][
         'num_mel_bins']
@@ -370,7 +370,7 @@ def training_with_ipex(args):
         min_lr=1e-6,
         threshold=0.01,
     )
-    device = 'cpu'
+    device = 'xpu'
     optimized_model.to(device)
 
     training_config = configs['training_config']
